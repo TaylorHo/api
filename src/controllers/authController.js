@@ -4,11 +4,19 @@ const User = require('../models/User'); // acessando o módulo exportado (que é
 
 const router = express.Router(); // agora "router" ppode ser usado para definir as rotas de usuário
 
-// req = requisição         res = resposta
+// req = requisição --- res = resposta
 router.post('/register', async (req, res) => { // através do método POST no caminho http://localhost:3000/register vamos registrar algum usuário
+  const { email } = req.body; // cria uma constante com o email recebido (pega apenas o email, nenhum dos outros dados)
+  
   try { // tenta criar um noovo usuário ao enviar os dados para esta rota ("tenta" pois se os nados  forem incondizentes com os parâmetros da tabela, não será possível criar)
+    if (await User.findOne({ email })) { // se a função encontrar o email (significa que ele já existe)
+      return res.status(400).send({ error: 'Usuário já Existente' }); // então executa isso, pra dizer q ele já existe
+    }
+  
     const user = await User.create(req.body); // cria o usuário com os parâmetros passados pelo POST (ou seja, no "req.body", pq o POST passa os dados no body da requisição)
     // await faz com que para seguir o script, a criação de usuário já tenha sido terminada
+
+    user.password = undefined; // faz com que a senha (mesmo em hash) não seja enviada junto com a resposta do servidor, para aumentar a segurança
 
     return res.send({ user }); // é retornado pro front-end os dados do usuário criado
   } catch(err) { // dá um catch no erro, caso aconteça algum

@@ -1,4 +1,5 @@
-const mongoose = require('mongoose');
+const mongoose = require('../database');
+const bcrypt = require('bcryptjs'); // para encriptar a senha
 
 // o "new mongoose.Schema" gera uma nova tabela como definida nos parâmetros
 const UserSchema = new mongoose.Schema({
@@ -21,6 +22,13 @@ const UserSchema = new mongoose.Schema({
     type: Date, // data
     default: Date.now, // data e hora atual
   },
+});
+
+UserSchema.pre('save', async function(next){ // antes de salvar os dados, ele chama a função
+  const hash = await bcrypt.hash(this.password, 10); // encripta a senha 10x
+  this.password = hash; // a senha recebe a senha encriptada
+
+  next(); // executa/termina a função
 });
 
 const User = mongoose.model('User', UserSchema); // User recebe a criação da tabela como definida anteriormente
