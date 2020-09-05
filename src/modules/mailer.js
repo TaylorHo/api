@@ -1,6 +1,6 @@
 const path = require('path');
 const nodemailer = require('nodemailer'); // para enviar emails com o Node.js
-const hbs = require('nodemailer-express/handlebars'); // serve para usar templates de emails
+const hbs = require('nodemailer-express-handlebars'); // serve para usar templates de emails
 // hbs = HandleBarS
 
 // const mailConfig = require('../config/mail.json'); // essa seria a importação da config de email
@@ -15,9 +15,12 @@ const transport = nodemailer.createTransport({
 });
 
 transport.use('compile', hbs({ // o email que será enviado vai usar as configurações do handlebars (hbs)
-  viewEngine: 'handlebars',
-  viewPath: path.resolve('./src/resources/mail'),
-  extName: '.html',
+  viewEngine: { // template
+    defaultLayout: undefined,
+    partialsDir: path.resolve('./src/resources/mail/')
+  },
+  viewPath: path.resolve('./src/resources/mail/'), // caminho de onde vamos guardar o conteúdo pros templates
+  extName: '.html', // define uma extensão padrão, assim não precisamos adicionar isso na importação do mailer
 }));
 
 module.exports = transport;

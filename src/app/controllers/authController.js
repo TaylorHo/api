@@ -1,6 +1,8 @@
 const express = require('express');
 const bcrypt = require('bcryptjs'); // para tirar o hash da senha
 const jwt = require('jsonwebtoken'); // token de autenticação p usuários
+const crypto = require('crypto'); // gerador de tokens nativo do node.js
+const mailer = require('../../modules/mailer');
 
 // O token de autenticação serve para o usuário ser logado automaticamente, por isso a validade de 1 dia (definida lá em baixo) é necessária (assim ele loga automaticamente até um dia depois de ter acessado a conta)
 
@@ -70,19 +72,84 @@ router.post('/authenticate', async (req, res) => { // através do método POST n
 });
 
 // ######################## FIM DA SEÇÃO DE AUTENTICAÇÃO DE USUÁRIOS ################################
-// ######################## INÍCIO DA SEÇÃO DE RECUPERAÇÃO DE SENHAS ################################
+// ############### INÍCIO DA SEÇÃO DE ENVIO DE EMAIL DE RECUPERAÇÃO DE SENHAS ################################
 
 router.post('/forgot_password', async (req, res) => { // através do método POST no caminho /forgot_password vamos solicitar uma recuperação de senha
   const { email } = req.body; // desestrutura e pega apenas o email do corpo da requisição
 
   try {
+    const user = await User.findOne({ email }); // tenta encontrar um usuário com o email da requisição
+
+    if (!user) { // se não tiver retorno do usuário (pq não existe)
+      return res.status(400).send({ error: 'Usuário não encontrado' }); // então retorna o estatus http 400 e a mensagem de erro
+    }
+
+    const token = crypto.randomBytes(20).toString('hex'); // gera token aleatório de 20 caracteres e transforma em uma string hexadecimal
+
+    const now = new Date(); // pega a data atual e joga em na const now
+    now.setHours(now.getHours() + 1); // a now recebe mais uma hora (para ser usada como data de expiração)
+
+    await User.findByIdAndUpdate(user.id, { // procura o user do ID especificado na requisição e altera ele
+      '$set': { // define alguma alteração nos dados do Banco
+        passwordResetToken: token, // salva o token no banco
+        passwordResetExpires: now, // salva a data de expiração no banco
+      }
+    });
+
+    mailer.sendMail({ // o nodemailer envia um email como definido abaixo
+      to: email, // recebido na request
+      from: 'taylor@indecisos.space', // quem envia
+      template: 'auth/forgot_password', // não precisa ser o caminho todo pq isso já está definido no modules/mailer
+      context: { token }, // é passada a variável q é utilizada no template
+    }, (err) => { // callback de erro
+      if (err) {
+        return res.status(400).send({ error: 'Não foi possível enviar o email de recuperação de senha' }); // erro
+      }
+
+      return res.send();
+    });
 
   } catch (err) {
-    res.status(400).send({ error: 'Erro na parte de "Esqueci Minha Senha", por favor tente novamente' });
+    res.status(400).send({ error: 'Erro na parte de "Esqueci Minha Senha", por favor tente novamente' }); // avisa se ocorrer algum erro
   }
 
 });
 
-// ######################## FIM DA SEÇÃO DE RECUPERAÇÃO DE SENHAS ################################
+// ############### FIM DA SEÇÃO DE ENVIO DE EMAIL DE RECUPERAÇÃO DE SENHAS ################################
+// ################## INÍCIO DA SEÇÃO DE ENVIO DE REDEFINIÇÃO DE SENHAS ################################
+
+router.post('/reset_password', async (req, res) => { // através do método POST no caminho /reset_password vamos resetar a senha
+  const { email, token, password } = req.body; // parâmetros passados na requisição
+
+  try {
+    const user = await User.findOne({ email })
+      .select('+passwordResetToken passwordResetExpires'); // seleciona os dados do usuário + os dados que não são selecionados por padrão
+    
+    if (!user) { // se não tiver retorno do usuário (pq não existe)
+      return res.status(400).send({ error: 'Usuário não encontrado' }); // então retorna o estatus http 400 e a mensagem de erro
+    }
+
+    if (token !== user.passwordResetToken) { // se o token da requisição e o do Banco de Dados não forem iguais então:
+      return res.status(400).send({ error: 'Token Inválido' }); // msg de erro
+    }
+
+    const now = new Date(); // pega a data atual
+
+    if (now > user.passwordResetExpires) { // se a data atual foi maior que a data de validade do token então:
+      return res.status(400).send({ error: 'Token Expirado' }); // msg de erro
+    }
+
+    // se tudo ocorreu bem até aqui, então ele finalmente atualiza a senha
+    user.password = password; // a senha do user é atualizada 
+
+    await user.save(); // as alterações do MongoDB são salvas
+
+    res.send(); // tudo OK
+  } catch (err) { // dá um catch no erro
+    return res.status(400).send({ error: 'Não foi possível reiniciar a senha, tente novamente' }); // erro
+  }
+});
+
+// ################## INÍCIO DA SEÇÃO DE ENVIO DE REDEFINIÇÃO DE SENHAS ################################
 
 module.exports = app => app.use('/auth', router); // define http://localhost:3000/auth como uma rota padrão, assim o registro e a autenticação vão ter /auth como prefixo, ficando assim: http://localhost:3000/auth/(register ou authenticate)

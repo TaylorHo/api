@@ -18,6 +18,14 @@ const UserSchema = new mongoose.Schema({
     required: true, // obrigatório
     select: false, // impede que a senha seja enviada para o client-side no array de usuários
   },
+  passwordResetToken: {
+    type: String, // texto
+    select: false, // impede que seja enviada para o client-side no array de usuário
+  },
+  passwordResetExpires: {
+    type: Date, // data
+    select: false, // impede que seja enviada para o client-side no array de usuário
+  },
   createdAt: {
     type: Date, // data
     default: Date.now, // data e hora atual
