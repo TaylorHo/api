@@ -19,7 +19,6 @@ function generateTokeen(params = {}){ // função para criar o token com base em
 
 // ######################## INÍCIO DA SEÇÃO DE REGISTRO DE USUÁRIOS ################################
 
-// req = requisição --- res = resposta
 router.post('/register', async (req, res) => { // através do método POST no caminho /register vamos registrar algum usuário
   const { email } = req.body; // cria uma constante com o email recebido (pega apenas o email, nenhum dos outros dados)
   
@@ -71,5 +70,19 @@ router.post('/authenticate', async (req, res) => { // através do método POST n
 });
 
 // ######################## FIM DA SEÇÃO DE AUTENTICAÇÃO DE USUÁRIOS ################################
+// ######################## INÍCIO DA SEÇÃO DE RECUPERAÇÃO DE SENHAS ################################
+
+router.post('/forgot_password', async (req, res) => { // através do método POST no caminho /forgot_password vamos solicitar uma recuperação de senha
+  const { email } = req.body; // desestrutura e pega apenas o email do corpo da requisição
+
+  try {
+
+  } catch (err) {
+    res.status(400).send({ error: 'Erro na parte de "Esqueci Minha Senha", por favor tente novamente' });
+  }
+
+});
+
+// ######################## FIM DA SEÇÃO DE RECUPERAÇÃO DE SENHAS ################################
 
 module.exports = app => app.use('/auth', router); // define http://localhost:3000/auth como uma rota padrão, assim o registro e a autenticação vão ter /auth como prefixo, ficando assim: http://localhost:3000/auth/(register ou authenticate)
