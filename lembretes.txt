@@ -1,5 +1,0 @@
-Sempre que for mexer com alguma rota, tem que usar:
-
-const express = require('express');
-
-Depois vc trabalha com a rota utilizando express.alguma_coisa

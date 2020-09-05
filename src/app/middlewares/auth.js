@@ -4,7 +4,7 @@
 // todas essas verificações simples são para garantir que o jwt não precise processar dados que não estão válidos (dessa maneira mto menos desempenho é usado do backend)
 
 const jwt = require('jsonwebtoken'); // para verificar o token recebido
-const authConfig = require('../config/auth.json'); // para comparar a hash da API e garantir que é uma requisição segura
+const authConfig = require('../../config/auth.json'); // para comparar a hash da API e garantir que é uma requisição segura
 
 module.exports = (req, res, next) => { // além do req e res, tem o next, que só é chamado quando o user pode prosseguir (ou seja, caso esteja autenticado)
   // ######################## INÍCIO DAS VERIFICAÇÕES SIMPLES ################################

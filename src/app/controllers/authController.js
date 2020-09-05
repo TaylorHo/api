@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken'); // token de autenticação p usuários
 
 // O token de autenticação serve para o usuário ser logado automaticamente, por isso a validade de 1 dia (definida lá em baixo) é necessária (assim ele loga automaticamente até um dia depois de ter acessado a conta)
 
-const authConfig = require('../config/auth.json'); //secret (hash único da API, para autenticação)
+const authConfig = require('../../config/auth.json'); //secret (hash único da API, para autenticação)
 
 const User = require('../models/User'); // acessando o módulo exportado (que é a estrutura da tabela)
 

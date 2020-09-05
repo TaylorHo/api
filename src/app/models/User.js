@@ -1,4 +1,4 @@
-const mongoose = require('../database');
+const mongoose = require('../../database');
 const bcrypt = require('bcryptjs'); // para encriptar a senha
 
 // o "new mongoose.Schema" gera uma nova tabela como definida nos parâmetros
